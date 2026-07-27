@@ -36,13 +36,21 @@ export class Msg91Service {
       }
 
       return { reqId, message: response.data.message };
-    } catch (error) {
-      const message =
-        axios.isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : 'Failed to send OTP via MSG91';
-      throw new HttpException(message, HttpStatus.BAD_REQUEST);
-    }
+    }  catch (error) {
+  if (axios.isAxiosError(error)) {
+    console.error('MSG91 error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+  } else {
+    console.error('MSG91 unexpected error:', error);
+  }
+  const message =
+    axios.isAxiosError(error) && error.response?.data?.message
+      ? error.response.data.message
+      : 'Failed to send OTP via MSG91';
+  throw new HttpException(message, HttpStatus.BAD_REQUEST);
+}
   }
 
   async verifyOtp(phone: string, otp: string, reqId: string): Promise<boolean> {
