@@ -40,10 +40,11 @@ export class Msg91Service {
       return { reqId, message: response.data.message };
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('MSG91 error:', {
-          status: error.response?.status,
-          data: error.response?.data,
-        });
+        console.log(error.response)
+        // console.error('MSG91 error:', {
+        //   status: error.response?.status,
+        //   data: error.response?.data,
+        // });
       } else {
         console.error('MSG91 unexpected error:', error);
       }
