@@ -15,14 +15,16 @@ export class Msg91Service {
   async sendOtp(phone: string): Promise<{ reqId: string; message: string }> {
     try {
       const response = await axios.post(
-        'https://control.msg91.com/api/v5/widget/sendOtp',
+        'https://api.msg91.com/api/v5/widget/sendOtp',
         {
           widgetId: this.widgetId,
-          tokenAuth: this.authKey,
           identifier: phone,
         },
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            authkey: this.authKey,
+          },
         },
       );
 
@@ -36,36 +38,37 @@ export class Msg91Service {
       }
 
       return { reqId, message: response.data.message };
-    }  catch (error) {
-  if (axios.isAxiosError(error)) {
-    console.error('MSG91 error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-  } else {
-    console.error('MSG91 unexpected error:', error);
-  }
-  const message =
-    axios.isAxiosError(error) && error.response?.data?.message
-      ? error.response.data.message
-      : 'Failed to send OTP via MSG91';
-  throw new HttpException(message, HttpStatus.BAD_REQUEST);
-}
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('MSG91 error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      } else {
+        console.error('MSG91 unexpected error:', error);
+      }
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : 'Failed to send OTP via MSG91';
+      throw new HttpException(message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async verifyOtp(phone: string, otp: string, reqId: string): Promise<boolean> {
     try {
       const response = await axios.post(
-        'https://control.msg91.com/api/v5/widget/verifyOtp',
+        'https://api.msg91.com/api/v5/widget/verifyOtp',
         {
           widgetId: this.widgetId,
-          tokenAuth: this.authKey,
-          identifier: phone,
-          otp: otp,
           reqId: reqId,
+          otp: otp,
         },
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            authkey: this.authKey,
+          },
         },
       );
       return response.data?.type === 'success';
