@@ -26,7 +26,7 @@ export class AuthService {
 
   // 2. Verify OTP and mark phone as verified
   async verifyOtp(phone: string, otp: string, reqId: string) {
-    const isValid = await this.msg91Service.verifyOtp(phone, otp, reqId);
+    const isValid = await this.msg91Service.verifyOtp(otp, reqId);
     if (!isValid) {
       throw new UnauthorizedException('Invalid or expired OTP');
     }
