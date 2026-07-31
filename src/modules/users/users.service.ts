@@ -15,8 +15,8 @@ export class UsersService {
     return this.userModel.findById(userId).exec();
   }
 
-  async findByPhone(phone: string) {
-    return this.userModel.findOne({ phone }).exec();
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
   // Used during authentication to check login credentials
@@ -29,31 +29,41 @@ export class UsersService {
   }
 
   // Create user during registration
-  async createUser(data: { phone: string; username?: string; password?: string }) {
-    return this.userModel.create(data);
+  async createUser(data: { email: string; username?: string; password?: string }) {
+    return this.userModel.create({
+      ...data,
+      email: data.email.toLowerCase(),
+    });
   }
 
   // Save generated OTP and expiration time for verification
   async setOtp(userId: string, otp: string, expiresAt: Date) {
-    return this.userModel.findByIdAndUpdate(
-      userId,
-      { otp, otpExpiresAt: expiresAt },
-      { new: true },
-    ).exec();
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { otp, otpExpiresAt: expiresAt },
+        { new: true },
+      )
+      .exec();
   }
 
   // Find user and select secret OTP fields for validation
-  async findWithOtp(phone: string) {
-    return this.userModel.findOne({ phone }).select('+otp +otpExpiresAt').exec();
+  async findWithOtp(email: string) {
+    return this.userModel
+      .findOne({ email: email.toLowerCase() })
+      .select('+otp +otpExpiresAt')
+      .exec();
   }
 
-  // Mark profile mobile as verified after successfully validating OTP
-  async markPhoneAsVerified(userId: string) {
-    return this.userModel.findByIdAndUpdate(
-      userId,
-      { isPhoneVerified: true, $unset: { otp: 1, otpExpiresAt: 1 } },
-      { new: true },
-    ).exec();
+  // Mark profile email as verified after successfully validating OTP
+  async markEmailAsVerified(userId: string) {
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { isEmailVerified: true, $unset: { otp: 1, otpExpiresAt: 1 } },
+        { new: true },
+      )
+      .exec();
   }
 
   async updateProfile(userId: string, data: Partial<User>) {

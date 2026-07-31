@@ -11,12 +11,12 @@ export class AuthController {
 
   @Post('send-otp')
   sendOtp(@Body() dto: SendOtpDto) {
-    return this.authService.sendOtp(dto.phone);
+    return this.authService.sendOtp(dto.email);
   }
 
   @Post('verify-otp')
   verifyOtp(@Body() dto: VerifyOtpDto) {
-    return this.authService.verifyOtp(dto.phone, dto.otp, dto.reqId);
+    return this.authService.verifyOtp(dto.email, dto.otp, dto.reqId);
   }
 
   @Post('register')

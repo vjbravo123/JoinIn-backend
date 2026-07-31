@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Msg91Service } from './msg91.service';
+import { ResendService } from './resend.service';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,59 +14,59 @@ import { LoginDto } from './dto/login.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly msg91Service: Msg91Service,
+    private readonly resendService: ResendService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
 
-  // 1. Send OTP to phone
-  async sendOtp(phone: string) {
-    return await this.msg91Service.sendOtp(phone);
+  // 1. Send OTP to email
+  async sendOtp(email: string) {
+    return await this.resendService.sendOtp(email);
   }
 
-  // 2. Verify OTP and mark phone as verified
-  async verifyOtp(phone: string, otp: string, reqId: string) {
-    const isValid = await this.msg91Service.verifyOtp(otp, reqId);
+  // 2. Verify OTP and mark email as verified
+  async verifyOtp(email: string, otp: string, reqId?: string) {
+    const isValid = await this.resendService.verifyOtp(otp, reqId, email);
     if (!isValid) {
       throw new UnauthorizedException('Invalid or expired OTP');
     }
 
-    let user = await this.usersService.findByPhone(phone);
+    let user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      user = await this.usersService.createUser({ phone });
+      user = await this.usersService.createUser({ email });
     }
 
-    const verifiedUser = await this.usersService.markPhoneAsVerified(
+    const verifiedUser = await this.usersService.markEmailAsVerified(
       String(user._id),
     );
 
     if (!verifiedUser) {
-      throw new BadRequestException('Failed to verify user phone number');
+      throw new BadRequestException('Failed to verify user email address');
     }
 
     return {
-      message: 'Mobile number verified successfully',
-      isPhoneVerified: true,
+      message: 'Email address verified successfully',
+      isEmailVerified: true,
       userId: verifiedUser._id,
-      phone: verifiedUser.phone,
+      email: verifiedUser.email,
     };
   }
 
   // 3. Complete user signup with username & password after OTP verification
   async register(registerDto: RegisterDto) {
-    const { phone, username, password, name } = registerDto;
+    const { email, username, password, name } = registerDto;
 
-    const user = await this.usersService.findByPhone(phone);
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new BadRequestException(
-        'Please verify your mobile number via OTP before registering.',
+        'Please verify your email address via OTP before registering.',
       );
     }
 
-    if (!user.isPhoneVerified) {
+    if (!user.isEmailVerified) {
       throw new BadRequestException(
-        'Mobile number is not verified. Please verify OTP first.',
+        'Email address is not verified. Please verify OTP first.',
       );
     }
 
@@ -98,7 +98,7 @@ export class AuthService {
     const payload = {
       sub: String(updatedUser._id),
       username: updatedUser.username,
-      phone: updatedUser.phone,
+      email: updatedUser.email,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -107,10 +107,10 @@ export class AuthService {
       accessToken,
       user: {
         id: updatedUser._id,
-        phone: updatedUser.phone,
+        email: updatedUser.email,
         username: updatedUser.username,
         name: updatedUser.name,
-        isPhoneVerified: updatedUser.isPhoneVerified,
+        isEmailVerified: updatedUser.isEmailVerified,
       },
     };
   }
@@ -125,9 +125,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    if (!user.isPhoneVerified) {
+    if (!user.isEmailVerified) {
       throw new UnauthorizedException(
-        'Mobile number not verified. Please verify your mobile number via OTP.',
+        'Email address not verified. Please verify your email via OTP.',
       );
     }
 
@@ -145,12 +145,12 @@ export class AuthService {
     const payload = {
       sub: String(user._id),
       username: user.username,
-      phone: user.phone,
+      email: user.email,
     };
 
     const accessToken = this.jwtService.sign(payload);
 
-    // Safely delete sensitive fields before returning the user object
+    // Safely delete sensitive fields before returning user object
     const userObj = (user.toObject ? user.toObject() : user) as Record<string, any>;
     delete userObj.password;
 
