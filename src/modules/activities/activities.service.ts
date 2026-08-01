@@ -56,24 +56,63 @@ export class ActivitiesService {
 
     const userObjectId = new Types.ObjectId(userId);
 
+    // 1. Prevent joining if user already joined
     if (activity.participants.some((id) => id.equals(userObjectId))) {
       throw new BadRequestException('You already joined this activity');
     }
 
+    // 2. Prevent joining if activity is full
     if (activity.participants.length >= activity.maxParticipants) {
       throw new BadRequestException('Activity is full');
     }
 
-    // Add user to Activity Participants
+    // 3. Add user to Activity Participants
     activity.participants.push(userObjectId);
     await activity.save();
 
-    // Add user to Activity Group Chat
-    await this.chatRoomModel.updateOne(
-      { activity: activity._id },
-      { $addToSet: { members: userObjectId } },
-    );
+    // 4. Check if a GROUP chatroom exists for this activity
+    let chatRoom = await this.chatRoomModel.findOne({
+      activity: activity._id,
+      type: 'GROUP',
+    });
 
-    return activity;
+    if (!chatRoom) {
+      // If group chatroom does not exist, create it and add ALL participants (host + all current joined members)
+      const uniqueMembers = Array.from(
+        new Set([
+          activity.host.toString(),
+          ...activity.participants.map((p) => p.toString()),
+        ]),
+      ).map((id) => new Types.ObjectId(id));
+
+      chatRoom = await this.chatRoomModel.create({
+        type: 'GROUP',
+        activity: activity._id,
+        members: uniqueMembers,
+      });
+    } else {
+      // If group chatroom exists, add the newly joined user to members
+      await this.chatRoomModel.updateOne(
+        { _id: chatRoom._id },
+        { $addToSet: { members: userObjectId } },
+      );
+    }
+
+    // 5. Fetch populated activity details to return to the frontend
+// 5. Fetch populated activity details to return to the frontend
+    const updatedActivity = await this.activityModel
+      .findById(activityId)
+      .populate('host', 'name avatar isPhoneVerified')
+      .exec();
+
+    if (!updatedActivity) {
+      throw new BadRequestException('Activity not found');
+    }
+
+    // Return the updated activity object with chatRoomId included
+    return {
+      ...updatedActivity.toObject(),
+      chatRoomId: chatRoom._id,
+    };
   }
 }
