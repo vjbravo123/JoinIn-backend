@@ -8,7 +8,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+    credentials: true,
+  },
+  transports: ['polling', 'websocket'],
+})
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
@@ -20,7 +26,20 @@ export class ChatGateway {
     @MessageBody() data: { chatRoomId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    client.join(data.chatRoomId);
+    if (data?.chatRoomId) {
+      client.join(data.chatRoomId);
+      console.log(`Socket ${client.id} joined room ${data.chatRoomId}`);
+    }
+  }
+
+  @SubscribeMessage('leaveRoom')
+  handleLeaveRoom(
+    @MessageBody() data: { chatRoomId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (data?.chatRoomId) {
+      client.leave(data.chatRoomId);
+    }
   }
 
   @SubscribeMessage('sendMessage')

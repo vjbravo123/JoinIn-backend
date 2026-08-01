@@ -37,15 +37,16 @@ export class ChatService {
       .exec();
   }
 
-  async saveMessage(chatRoomId: string, senderId: string, content: string) {
-    const message = await this.messageModel.create({
-      chatRoom: new Types.ObjectId(chatRoomId),
-      sender: new Types.ObjectId(senderId),
-      content,
-    });
+async saveMessage(chatRoomId: string, senderId: string, content: string) {
+  const message = await this.messageModel.create({
+    chatRoom: new Types.ObjectId(chatRoomId),
+    sender: new Types.ObjectId(senderId),
+    content,
+  });
 
-    return message.populate('sender', 'name avatar');
-  }
+  const populated = await message.populate('sender', 'name avatar');
+  return populated.toJSON(); // Converts Mongoose document to clean JSON
+}
 
   async getMessages(chatRoomId: string) {
     return this.messageModel
