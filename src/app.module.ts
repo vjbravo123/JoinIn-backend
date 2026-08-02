@@ -7,7 +7,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { LocationService } from './modules/location/location.service';
 import { LocationModule } from './modules/location/location.module';
 
 @Module({
@@ -27,6 +26,6 @@ import { LocationModule } from './modules/location/location.module';
     LocationModule,
   ],
   controllers: [AppController],
-  providers: [AppService, LocationService],
+  providers: [AppService],
 })
 export class AppModule {}
