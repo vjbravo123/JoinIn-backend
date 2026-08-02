@@ -16,11 +16,13 @@ export class LocationService {
 
     try {
       const response = await axios.get(`${this.baseUrl}/autocomplete`, {
-        params: {
-          input,
-          api_key: this.apiKey,
+        params: { input, api_key: this.apiKey },
+        headers: {
+            Referer: 'https://joinin-backend-x11z.onrender.com',
+            // some APIs check Origin instead — try adding both if unsure
+            Origin: 'https://joinin-backend-x11z.onrender.com',
         },
-      });
+        });
 
       // Ola Maps returns predictions array
       const predictions = response.data?.predictions || response.data?.data || [];
