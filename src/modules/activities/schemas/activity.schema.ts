@@ -29,6 +29,10 @@ export class Activity {
   @Prop({ default: 10 })
   maxParticipants: number;
 
+  // Added images field to store array of image URLs
+  @Prop({ type: [String], default: [] })
+  images: string[];
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   host: Types.ObjectId;
 

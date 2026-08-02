@@ -1,35 +1,45 @@
-import { IsNotEmpty, IsString, IsNumber, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  IsArray,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateActivityDto {
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   title: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   category: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   locationName: string;
 
-  @IsNotEmpty()
   @IsNumber()
   latitude: number;
 
-  @IsNotEmpty()
   @IsNumber()
   longitude: number;
 
-  @IsNotEmpty()
   @IsDateString()
   eventDate: string;
 
   @IsOptional()
   @IsNumber()
   maxParticipants?: number;
+
+  // Added images validation for frontend URLs
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }
