@@ -15,8 +15,16 @@ export class ActivitiesController {
   }
 
   @Get()
-  findAll(@Query('category') category?: string) {
-    return this.activitiesService.findAll(category);
+  findAll(
+    @Query('category') category?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+  ) {
+    return this.activitiesService.findAll(
+      category,
+      lat !== undefined ? Number(lat) : undefined,
+      lng !== undefined ? Number(lng) : undefined,
+    );
   }
 
   @Get(':id')
