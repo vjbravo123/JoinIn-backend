@@ -183,6 +183,8 @@ export class LocationService {
             lat,
             lon: lng,
             format: 'json',
+            zoom: 18, 
+            addressdetails: 1,
           },
           headers: {
             'User-Agent': 'JoinIn-App/1.0',
