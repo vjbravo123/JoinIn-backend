@@ -11,22 +11,28 @@ export class ChatService {
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
   ) {}
 
-  async getOrCreateDirectChat(userA: string, userB: string) {
-    const objUserA = new Types.ObjectId(userA);
-    const objUserB = new Types.ObjectId(userB);
+  // backend: chat.service.ts
+async getOrCreateDirectChat(userA: string, userB: string) {
+  const objUserA = new Types.ObjectId(userA);
+  const objUserB = new Types.ObjectId(userB);
 
-    const existing = await this.chatRoomModel.findOne({
+  const existing = await this.chatRoomModel
+    .findOne({
       type: 'DIRECT',
       members: { $all: [objUserA, objUserB] },
-    });
+    })
+    .populate('members', 'name username avatar') // <-- Make sure members are populated
+    .exec();
 
-    if (existing) return existing;
+  if (existing) return existing;
 
-    return this.chatRoomModel.create({
-      type: 'DIRECT',
-      members: [objUserA, objUserB],
-    });
-  }
+  const newRoom = await this.chatRoomModel.create({
+    type: 'DIRECT',
+    members: [objUserA, objUserB],
+  });
+
+  return newRoom.populate('members', 'name username avatar'); // <-- Populate new room members
+}
 
   async getUserChatRooms(userId: string) {
     return this.chatRoomModel
