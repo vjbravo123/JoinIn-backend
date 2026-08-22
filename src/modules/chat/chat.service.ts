@@ -37,11 +37,12 @@ async getOrCreateDirectChat(userA: string, userB: string) {
   async getUserChatRooms(userId: string) {
     return this.chatRoomModel
       .find({ members: new Types.ObjectId(userId) })
-      .populate('activity', 'title')
+      .populate('activity', 'title images')
       .populate('members', 'name avatar')
       .sort({ updatedAt: -1 })
       .exec();
   }
+
 
 async saveMessage(chatRoomId: string, senderId: string, content: string) {
   const message = await this.messageModel.create({
